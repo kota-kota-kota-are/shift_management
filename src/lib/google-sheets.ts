@@ -1,231 +1,272 @@
-import fs from "fs";
-import path from "path";
-
 // ---------------------------------------------------------------------------
-// ローカル JSON ファイルベースのデータストア
-// Google Sheets API と同じインターフェースを提供する
+// インメモリデータストア
+// Vercelサーバーレス環境でも動作する。コールドスタート時にデモデータで初期化。
 // ---------------------------------------------------------------------------
-
-const DATA_DIR = path.join(process.cwd(), "data");
-
-// シート名 → JSONファイル名のマッピング
-const FILE_MAP: Record<string, string> = {
-  スタッフ一覧: "staff.json",
-  シフトパターン: "shift-patterns.json",
-  シフト希望: "shift-requests.json",
-  確定シフト: "confirmed-shifts.json",
-  店舗設定: "store-settings.json",
-};
 
 // ---------------------------------------------------------------------------
 // ヘッダー行定義（各シートの1行目）
 // ---------------------------------------------------------------------------
 const HEADERS: Record<string, string[]> = {
   スタッフ一覧: [
-    "id",
-    "name",
-    "role",
-    "pinHash",
-    "displayOrder",
-    "isActive",
-    "weeklyMaxHours",
-    "createdAt",
-    "updatedAt",
+    "id", "name", "role", "pinHash", "displayOrder",
+    "isActive", "weeklyMaxHours", "createdAt", "updatedAt",
   ],
   シフトパターン: [
-    "id",
-    "name",
-    "shortName",
-    "startTime",
-    "endTime",
-    "breakMinutes",
-    "color",
-    "displayOrder",
-    "isActive",
-    "createdAt",
+    "id", "name", "shortName", "startTime", "endTime",
+    "breakMinutes", "color", "displayOrder", "isActive", "createdAt",
   ],
   シフト希望: [
-    "id",
-    "staffId",
-    "date",
-    "patternId",
-    "availability",
-    "note",
-    "submittedAt",
-    "updatedAt",
+    "id", "staffId", "date", "patternId", "availability",
+    "note", "submittedAt", "updatedAt",
   ],
   確定シフト: [
-    "id",
-    "staffId",
-    "date",
-    "patternId",
-    "status",
-    "adminNote",
-    "confirmedBy",
-    "confirmedAt",
-    "updatedAt",
+    "id", "staffId", "date", "patternId", "status",
+    "adminNote", "confirmedBy", "confirmedAt", "updatedAt",
   ],
   店舗設定: ["key", "value", "description", "updatedAt"],
 };
 
 // ---------------------------------------------------------------------------
-// 初期データ（スタッフ一覧のみ: 管理者 admin / PIN: 0000）
+// デモデータ生成
 // ---------------------------------------------------------------------------
 const bcryptHash0000 =
   "$2b$10$QASBeLDvOr/D9K1icny8KODnTBHX35sf6eqBOdPDYhUe33Thxsyo6";
-// ↑ bcryptjs.hashSync("0000", 10) の結果
 
-const INITIAL_DATA: Record<string, string[][]> = {
-  スタッフ一覧: [
-    [
-      "staff_admin_001",
-      "管理者",
-      "admin",
-      bcryptHash0000,
-      "1",
-      "TRUE",
-      "",
-      new Date().toISOString(),
-      new Date().toISOString(),
-    ],
-    [
-      "staff_sample_001",
-      "田中太郎",
-      "staff",
-      bcryptHash0000,
-      "2",
-      "TRUE",
-      "40",
-      new Date().toISOString(),
-      new Date().toISOString(),
-    ],
-    [
-      "staff_sample_002",
-      "佐藤花子",
-      "staff",
-      bcryptHash0000,
-      "3",
-      "TRUE",
-      "30",
-      new Date().toISOString(),
-      new Date().toISOString(),
-    ],
-  ],
-  シフトパターン: [
-    [
-      "pat_early",
-      "早番",
-      "早",
-      "09:00",
-      "15:00",
-      "60",
-      "#FF9500",
-      "1",
-      "TRUE",
-      new Date().toISOString(),
-    ],
-    [
-      "pat_late",
-      "遅番",
-      "遅",
-      "15:00",
-      "22:00",
-      "60",
-      "#007AFF",
-      "2",
-      "TRUE",
-      new Date().toISOString(),
-    ],
-    [
-      "pat_full",
-      "通し",
-      "通",
-      "09:00",
-      "22:00",
-      "120",
-      "#34C759",
-      "3",
-      "TRUE",
-      new Date().toISOString(),
-    ],
-  ],
+const STAFF_IDS = {
+  admin: "staff_admin_001",
+  tanaka: "staff_sample_001",
+  sato: "staff_sample_002",
+  suzuki: "staff_sample_003",
+  yamada: "staff_sample_004",
 };
 
-// ---------------------------------------------------------------------------
-// ファイル操作ヘルパー
-// ---------------------------------------------------------------------------
+const PATTERN_IDS = {
+  early: "pat_early",
+  late: "pat_late",
+  full: "pat_full",
+};
 
-function ensureDataDir(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
 }
 
-function getFilePath(sheetName: string): string {
-  const fileName = FILE_MAP[sheetName];
-  if (!fileName) {
-    throw new Error(`Unknown sheet: ${sheetName}`);
+function generateDemoShifts(): string[][] {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-indexed
+  const ts = now.toISOString();
+
+  const staffIds = [STAFF_IDS.admin, STAFF_IDS.tanaka, STAFF_IDS.sato, STAFF_IDS.suzuki, STAFF_IDS.yamada];
+  const patternIds = [PATTERN_IDS.early, PATTERN_IDS.late, PATTERN_IDS.full];
+  const rows: string[][] = [];
+
+  // 当月分の確定シフトを生成
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let counter = 0;
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${pad2(month + 1)}-${pad2(day)}`;
+    const dow = new Date(year, month, day).getDay();
+
+    for (const staffId of staffIds) {
+      // 日曜は全員休み
+      if (dow === 0) continue;
+
+      // 各スタッフに曜日に応じたパターンを割り当て
+      let patternId: string | null = null;
+
+      if (staffId === STAFF_IDS.admin) {
+        // 管理者: 平日は通し、土曜は早番
+        if (dow >= 1 && dow <= 5) patternId = PATTERN_IDS.full;
+        else if (dow === 6) patternId = PATTERN_IDS.early;
+      } else if (staffId === STAFF_IDS.tanaka) {
+        // 田中: 月水金は早番、火木は遅番、土曜休み
+        if ([1, 3, 5].includes(dow)) patternId = PATTERN_IDS.early;
+        else if ([2, 4].includes(dow)) patternId = PATTERN_IDS.late;
+      } else if (staffId === STAFF_IDS.sato) {
+        // 佐藤: 火木土は早番、月水金は遅番
+        if ([2, 4, 6].includes(dow)) patternId = PATTERN_IDS.early;
+        else if ([1, 3, 5].includes(dow)) patternId = PATTERN_IDS.late;
+      } else if (staffId === STAFF_IDS.suzuki) {
+        // 鈴木: 月火水は早番、木金は通し、土曜休み
+        if ([1, 2, 3].includes(dow)) patternId = PATTERN_IDS.early;
+        else if ([4, 5].includes(dow)) patternId = PATTERN_IDS.full;
+      } else if (staffId === STAFF_IDS.yamada) {
+        // 山田: 水木金土は遅番
+        if ([3, 4, 5, 6].includes(dow)) patternId = PATTERN_IDS.late;
+      }
+
+      if (patternId) {
+        counter++;
+        rows.push([
+          `conf_${counter}`,
+          staffId,
+          dateStr,
+          patternId,
+          "published",
+          "",
+          STAFF_IDS.admin,
+          ts,
+          ts,
+        ]);
+      }
+    }
   }
-  return path.join(DATA_DIR, fileName);
+
+  return rows;
+}
+
+function generateDemoRequests(): string[][] {
+  const now = new Date();
+  // 来月分の希望
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const year = nextMonth.getFullYear();
+  const month = nextMonth.getMonth();
+  const ts = now.toISOString();
+
+  const rows: string[][] = [];
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  let counter = 0;
+
+  // 田中太郎の来月シフト希望
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${pad2(month + 1)}-${pad2(day)}`;
+    const dow = new Date(year, month, day).getDay();
+
+    if (dow === 0) {
+      counter++;
+      rows.push([
+        `req_${counter}`, STAFF_IDS.tanaka, dateStr, "", "unavailable",
+        "日曜は休みたいです", ts, ts,
+      ]);
+    } else if ([1, 3, 5].includes(dow)) {
+      counter++;
+      rows.push([
+        `req_${counter}`, STAFF_IDS.tanaka, dateStr, PATTERN_IDS.early, "preferred",
+        "", ts, ts,
+      ]);
+    } else if ([2, 4].includes(dow)) {
+      counter++;
+      rows.push([
+        `req_${counter}`, STAFF_IDS.tanaka, dateStr, PATTERN_IDS.late, "available",
+        "", ts, ts,
+      ]);
+    }
+  }
+
+  // 佐藤花子の来月シフト希望
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${pad2(month + 1)}-${pad2(day)}`;
+    const dow = new Date(year, month, day).getDay();
+
+    if (dow === 0 || dow === 6) {
+      counter++;
+      rows.push([
+        `req_${counter}`, STAFF_IDS.sato, dateStr, "", "unavailable",
+        "週末は予定があります", ts, ts,
+      ]);
+    } else {
+      counter++;
+      rows.push([
+        `req_${counter}`, STAFF_IDS.sato, dateStr, PATTERN_IDS.early, "preferred",
+        "", ts, ts,
+      ]);
+    }
+  }
+
+  return rows;
+}
+
+function buildInitialData(): Record<string, string[][]> {
+  const ts = new Date().toISOString();
+
+  return {
+    スタッフ一覧: [
+      [STAFF_IDS.admin, "管理者", "admin", bcryptHash0000, "1", "TRUE", "", ts, ts],
+      [STAFF_IDS.tanaka, "田中太郎", "staff", bcryptHash0000, "2", "TRUE", "40", ts, ts],
+      [STAFF_IDS.sato, "佐藤花子", "staff", bcryptHash0000, "3", "TRUE", "30", ts, ts],
+      [STAFF_IDS.suzuki, "鈴木一郎", "staff", bcryptHash0000, "4", "TRUE", "40", ts, ts],
+      [STAFF_IDS.yamada, "山田美咲", "staff", bcryptHash0000, "5", "TRUE", "24", ts, ts],
+    ],
+    シフトパターン: [
+      [PATTERN_IDS.early, "早番", "早", "09:00", "15:00", "60", "#FF9500", "1", "TRUE", ts],
+      [PATTERN_IDS.late, "遅番", "遅", "15:00", "22:00", "60", "#007AFF", "2", "TRUE", ts],
+      [PATTERN_IDS.full, "通し", "通", "09:00", "22:00", "120", "#34C759", "3", "TRUE", ts],
+    ],
+    シフト希望: generateDemoRequests(),
+    確定シフト: generateDemoShifts(),
+    店舗設定: [
+      ["store_name", "カフェ サンプル", "店舗名", ts],
+      ["request_deadline_day", "20", "シフト希望提出期限日", ts],
+      ["target_month_offset", "1", "対象月オフセット", ts],
+      ["business_start_time", "09:00", "営業開始時刻", ts],
+      ["business_end_time", "22:00", "営業終了時刻", ts],
+      ["min_staff_per_slot", "2", "最小スタッフ数", ts],
+      ["max_staff_per_slot", "5", "最大スタッフ数", ts],
+    ],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// インメモリストア（グローバル変数でホットリロード対応）
+// ---------------------------------------------------------------------------
+
+const globalStore = globalThis as unknown as {
+  __shiftStore?: Map<string, string[][]>;
+};
+
+function getStore(): Map<string, string[][]> {
+  if (!globalStore.__shiftStore) {
+    globalStore.__shiftStore = new Map();
+  }
+  return globalStore.__shiftStore;
 }
 
 function readData(sheetName: string): string[][] {
-  ensureDataDir();
-  const filePath = getFilePath(sheetName);
+  const store = getStore();
 
-  if (!fs.existsSync(filePath)) {
-    // 初回: ヘッダー + 初期データでファイル作成
+  if (!store.has(sheetName)) {
     const header = HEADERS[sheetName] || [];
-    const initial = INITIAL_DATA[sheetName] || [];
+    const initialData = buildInitialData();
+    const initial = initialData[sheetName] || [];
     const data = [header, ...initial];
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+    store.set(sheetName, data);
     return data;
   }
 
-  const raw = fs.readFileSync(filePath, "utf-8");
-  return JSON.parse(raw) as string[][];
+  return store.get(sheetName)!;
 }
 
 function writeData(sheetName: string, data: string[][]): void {
-  ensureDataDir();
-  const filePath = getFilePath(sheetName);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+  const store = getStore();
+  store.set(sheetName, data);
 }
 
 // ---------------------------------------------------------------------------
-// 公開API（Google Sheets API と同じインターフェース）
+// 公開API
 // ---------------------------------------------------------------------------
 
-/**
- * 指定シートの全行を取得する（ヘッダー行含む）
- */
 export async function getSheetData(sheetName: string): Promise<string[][]> {
-  return readData(sheetName);
+  // deep copy して返す（呼び出し側の変更がストアに影響しないように）
+  return readData(sheetName).map((row) => [...row]);
 }
 
-/**
- * 指定シートに行を追加する
- */
 export async function appendRow(
   sheetName: string,
   values: string[],
 ): Promise<void> {
   const data = readData(sheetName);
-  data.push(values);
+  data.push([...values]);
   writeData(sheetName, data);
 }
 
-/**
- * 指定シートの行を更新する
- * @param rowIndex 0ベース（ヘッダー行を除いたデータ行のインデックス）
- */
 export async function updateRow(
   sheetName: string,
   rowIndex: number,
   values: string[],
 ): Promise<void> {
   const data = readData(sheetName);
-  const actualIndex = rowIndex + 1; // ヘッダー行分をスキップ
+  const actualIndex = rowIndex + 1;
 
   if (actualIndex >= data.length) {
     throw new Error(
@@ -233,14 +274,10 @@ export async function updateRow(
     );
   }
 
-  data[actualIndex] = values;
+  data[actualIndex] = [...values];
   writeData(sheetName, data);
 }
 
-/**
- * 指定シートの行を削除する
- * @param rowIndex 0ベース（ヘッダー行を除いたデータ行のインデックス）
- */
 export async function deleteRow(
   sheetName: string,
   rowIndex: number,
@@ -258,10 +295,6 @@ export async function deleteRow(
   writeData(sheetName, data);
 }
 
-/**
- * 指定シートの特定列で値を検索し、最初に一致した行のインデックスを返す
- * @returns 0ベース（ヘッダー除く）、見つからなければ null
- */
 export async function findRowIndex(
   sheetName: string,
   columnIndex: number,
@@ -278,10 +311,6 @@ export async function findRowIndex(
   return null;
 }
 
-/**
- * 複数行を一括更新する
- * @param updates 各要素の rowIndex は 0ベース（ヘッダー除く）
- */
 export async function batchUpdateRows(
   sheetName: string,
   updates: { rowIndex: number; values: string[] }[],
@@ -293,7 +322,7 @@ export async function batchUpdateRows(
   for (const { rowIndex, values } of updates) {
     const actualIndex = rowIndex + 1;
     if (actualIndex < data.length) {
-      data[actualIndex] = values;
+      data[actualIndex] = [...values];
     }
   }
 
