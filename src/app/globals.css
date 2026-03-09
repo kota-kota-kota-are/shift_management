@@ -1,26 +1,99 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================
+   iOS / macOS HIG Design Tokens
+   Tailwind CSS v4 — @theme directive
+   ============================================ */
+
+@theme {
+  /* --- System Colors --- */
+  --color-system-blue: #007AFF;
+  --color-system-green: #34C759;
+  --color-system-orange: #FF9500;
+  --color-system-red: #FF3B30;
+  --color-system-yellow: #FFCC00;
+  --color-system-purple: #AF52DE;
+  --color-system-teal: #5AC8FA;
+  --color-system-indigo: #5856D6;
+
+  /* --- Background Colors --- */
+  --color-bg-primary: #F2F2F7;
+  --color-bg-secondary: #FFFFFF;
+  --color-bg-tertiary: #F2F2F7;
+  --color-bg-elevated: #FFFFFF;
+
+  /* --- Text Colors --- */
+  --color-text-primary: #000000;
+  --color-text-secondary: rgba(60, 60, 67, 0.6);
+  --color-text-tertiary: rgba(60, 60, 67, 0.3);
+
+  /* --- Separators --- */
+  --color-separator: rgba(60, 60, 67, 0.12);
+  --color-separator-opaque: #C6C6C8;
+
+  /* --- Font Family --- */
+  --font-family-default: "SF Pro Text", -apple-system, BlinkMacSystemFont,
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+
+  /* --- Border Radius --- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* --- Box Shadows --- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.16);
+
+  /* --- Transition Durations --- */
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ============================================
+   Base Styles
+   ============================================ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-family-default);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* --- iOS-style Selection Color --- */
+::selection {
+  background-color: rgba(0, 122, 255, 0.2);
+  color: inherit;
+}
+
+/* --- Hide Scrollbar (iOS-style) --- */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* --- Modal Animations --- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
