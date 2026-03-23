@@ -8,8 +8,10 @@ import {
   CalendarDays,
   LayoutDashboard,
   CalendarCog,
+  ClipboardEdit,
   Users,
   Settings,
+  HelpCircle,
 } from "lucide-react";
 import { NAV_ITEMS_STAFF, NAV_ITEMS_ADMIN } from "@/lib/constants";
 
@@ -22,8 +24,10 @@ const ICON_MAP = {
   CalendarDays,
   LayoutDashboard,
   CalendarCog,
+  ClipboardEdit,
   Users,
   Settings,
+  HelpCircle,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -34,9 +38,9 @@ const TAB_ITEMS_STAFF = NAV_ITEMS_STAFF;
 const TAB_ITEMS_ADMIN = [
   NAV_ITEMS_ADMIN[0], // ダッシュボード
   NAV_ITEMS_ADMIN[1], // シフト管理
-  NAV_ITEMS_ADMIN[2], // スタッフ
-  NAV_ITEMS_ADMIN[3], // 勤務表
-  NAV_ITEMS_ADMIN[4], // 設定
+  NAV_ITEMS_ADMIN[2], // 希望編集
+  NAV_ITEMS_ADMIN[4], // 勤務表
+  NAV_ITEMS_ADMIN[5], // 設定
 ];
 
 // ---------------------------------------------------------------------------

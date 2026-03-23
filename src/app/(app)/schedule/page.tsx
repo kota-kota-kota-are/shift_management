@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight, X, Clock, CalendarDays } from "lucide-react";
 import { getConfirmedShifts, getShiftPatterns } from "@/actions/shifts";
 import { getSessionData } from "@/actions/auth";
@@ -53,6 +53,7 @@ export default function SchedulePage() {
     } else {
       setMonth(month - 1);
     }
+    setWeekIndex(0);
   };
 
   const goNext = () => {
@@ -62,11 +63,25 @@ export default function SchedulePage() {
     } else {
       setMonth(month + 1);
     }
+    setWeekIndex(0);
   };
 
   // --- Calendar data ---
   const daysInMonth = getDaysInMonth(year, month);
   const firstDayOfWeek = getFirstDayOfMonth(year, month); // 0=Sun
+
+  // Week period management
+  const weekPeriods = useMemo(() => {
+    const periods: { start: number; end: number; label: string }[] = [];
+    periods.push({ start: 0, end: 0, label: "全日程" });
+    for (let s = 1; s <= daysInMonth; s += 7) {
+      const e = Math.min(s + 6, daysInMonth);
+      periods.push({ start: s, end: e, label: `${s}日〜${e}日` });
+    }
+    return periods;
+  }, [daysInMonth]);
+  const [weekIndex, setWeekIndex] = useState(0);
+  const currentPeriod = weekPeriods[weekIndex];
 
   // Build a map: date -> shifts for that date
   const shiftsByDate = new Map<string, ConfirmedShiftWithDetails[]>();
@@ -85,18 +100,32 @@ export default function SchedulePage() {
   const totalMinutes = myShifts.reduce((acc, s) => {
     const pat = patterns.find((p) => p.id === s.patternId);
     if (!pat) return acc;
-    return acc + calculateWorkingMinutes(pat.startTime, pat.endTime, pat.breakMinutes);
+    const startTime = s.effectiveStartTime || pat.startTime;
+    const endTime = s.effectiveEndTime || pat.endTime;
+    return acc + calculateWorkingMinutes(startTime, endTime, pat.breakMinutes);
   }, 0);
   const totalHours = Math.floor(totalMinutes / 60);
   const remainMinutes = totalMinutes % 60;
 
   // Calendar grid cells (fill leading blanks for alignment)
   const calendarCells: (number | null)[] = [];
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    calendarCells.push(null);
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    calendarCells.push(d);
+  if (currentPeriod && currentPeriod.start > 0) {
+    // Weekly view: only show days in this period
+    const startDow = new Date(year, month - 1, currentPeriod.start).getDay();
+    for (let i = 0; i < startDow; i++) {
+      calendarCells.push(null);
+    }
+    for (let d = currentPeriod.start; d <= currentPeriod.end; d++) {
+      calendarCells.push(d);
+    }
+  } else {
+    // Full month view
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      calendarCells.push(null);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      calendarCells.push(d);
+    }
   }
 
   // Selected date modal data
@@ -157,6 +186,24 @@ export default function SchedulePage() {
           </button>
         </div>
       </Card>
+
+      {/* Week Period Selector */}
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+        {weekPeriods.map((period, idx) => (
+          <button
+            key={idx}
+            onClick={() => setWeekIndex(idx)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-fast",
+              weekIndex === idx
+                ? "bg-system-blue text-white"
+                : "bg-bg-tertiary text-text-secondary hover:bg-bg-tertiary/80"
+            )}
+          >
+            {period.label}
+          </button>
+        ))}
+      </div>
 
       {/* Calendar */}
       <Card padding="sm">
@@ -224,14 +271,22 @@ export default function SchedulePage() {
                       {day}
                     </span>
                     {myDayShift ? (
-                      <span
-                        className="text-[10px] font-medium mt-0.5 px-1 rounded"
-                        style={{
-                          color: myDayShift.patternColor || "var(--color-system-blue)",
-                        }}
-                      >
-                        {myDayShift.patternShortName}
-                      </span>
+                      <div className="flex flex-col items-center mt-0.5">
+                        <span
+                          className="text-[10px] font-medium px-1 rounded"
+                          style={{
+                            color: myDayShift.patternColor || "var(--color-system-blue)",
+                          }}
+                        >
+                          {myDayShift.patternShortName}
+                        </span>
+                        {(myDayShift.effectiveStartTime !== myDayShift.patternStartTime ||
+                          myDayShift.effectiveEndTime !== myDayShift.patternEndTime) && (
+                          <span className="text-[7px] text-text-tertiary leading-tight">
+                            {myDayShift.effectiveStartTime}~{myDayShift.effectiveEndTime}
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-[10px] text-text-tertiary mt-0.5">
                         OFF
@@ -302,8 +357,13 @@ export default function SchedulePage() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-text-primary">
-                    {s.patternStartTime} - {s.patternEndTime}
+                    {s.effectiveStartTime} - {s.effectiveEndTime}
                   </p>
+                  {(s.effectiveStartTime !== s.patternStartTime || s.effectiveEndTime !== s.patternEndTime) && (
+                    <p className="text-[10px] text-text-tertiary">
+                      通常: {s.patternStartTime}-{s.patternEndTime}
+                    </p>
+                  )}
                   <Badge variant="info">{s.patternShortName}</Badge>
                 </div>
               </div>

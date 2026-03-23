@@ -66,6 +66,8 @@ export function rowToShiftRequest(row: string[]): ShiftRequest {
     staffId: row[REQ.STAFF_ID] ?? "",
     date: row[REQ.DATE] ?? "",
     patternId: row[REQ.PATTERN_ID] || null,
+    customStartTime: row[REQ.CUSTOM_START_TIME] || null,
+    customEndTime: row[REQ.CUSTOM_END_TIME] || null,
     availability: (row[REQ.AVAILABILITY] ?? "available") as Availability,
     note: row[REQ.NOTE] || null,
     submittedAt: row[REQ.SUBMITTED_AT] ?? "",
@@ -79,6 +81,8 @@ export function rowToConfirmedShift(row: string[]): ConfirmedShift {
     staffId: row[CONF.STAFF_ID] ?? "",
     date: row[CONF.DATE] ?? "",
     patternId: row[CONF.PATTERN_ID] ?? "",
+    customStartTime: row[CONF.CUSTOM_START_TIME] || null,
+    customEndTime: row[CONF.CUSTOM_END_TIME] || null,
     status: (row[CONF.STATUS] ?? "draft") as ShiftStatus,
     adminNote: row[CONF.ADMIN_NOTE] || null,
     confirmedBy: row[CONF.CONFIRMED_BY] ?? "",
@@ -100,6 +104,8 @@ export function getKeyDescription(key: StoreSettingKey): string {
     business_end_time: "営業終了時刻",
     min_staff_per_slot: "時間帯あたり最小スタッフ数",
     max_staff_per_slot: "時間帯あたり最大スタッフ数",
+    allowed_start_times: "選択可能な出勤時刻（カンマ区切り）",
+    allowed_end_times: "選択可能な退勤時刻（カンマ区切り）",
   };
   return descriptions[key] ?? "";
 }
@@ -136,5 +142,13 @@ export function parseSettings(rows: string[][]): ParsedStoreSettings {
     maxStaffPerSlot:
       Number(map.get("max_staff_per_slot")) ||
       DEFAULT_STORE_SETTINGS.maxStaffPerSlot,
+    allowedStartTimes: (map.get("allowed_start_times") || "09:00,09:30,10:00,10:30,11:00")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean),
+    allowedEndTimes: (map.get("allowed_end_times") || "15:00,16:00,17:00,18:00,19:00,20:00,21:00,22:00")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean),
   };
 }

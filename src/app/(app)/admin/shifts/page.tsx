@@ -60,6 +60,7 @@ export default function AdminShiftsPage() {
 
   // Grid editing state: cellKey -> patternId
   const [grid, setGrid] = useState<Map<string, string>>(new Map());
+  const [gridCustomTimes, setGridCustomTimes] = useState<Map<string, { startTime: string; endTime: string }>>(new Map());
   const [dirty, setDirty] = useState(false);
 
   // Edit modal
@@ -71,8 +72,21 @@ export default function AdminShiftsPage() {
 
   const yearMonth = formatYearMonth(year, month);
   const daysInMonth = getDaysInMonth(year, month);
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const allDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+
+  // Week period management
+  const weekPeriods = (() => {
+    const periods: { start: number; end: number; label: string }[] = [];
+    for (let s = 1; s <= daysInMonth; s += 7) {
+      const e = Math.min(s + 6, daysInMonth);
+      periods.push({ start: s, end: e, label: `${s}日〜${e}日` });
+    }
+    return periods;
+  })();
+  const [weekIndex, setWeekIndex] = useState(0);
+  const currentPeriod = weekPeriods[weekIndex] || weekPeriods[0];
+  const days = currentPeriod ? allDays.filter(d => d >= currentPeriod.start && d <= currentPeriod.end) : allDays;
 
   // Determine if the current month is published
   const isPublished = useMemo(() => {
@@ -123,10 +137,19 @@ export default function AdminShiftsPage() {
       // Initialize grid from confirmed shifts
       if (confRes.success) {
         const newGrid = new Map<string, string>();
+        const newCustomTimes = new Map<string, { startTime: string; endTime: string }>();
         for (const s of confRes.data) {
-          newGrid.set(cellKey(s.staffId, s.date), s.patternId);
+          const key = cellKey(s.staffId, s.date);
+          newGrid.set(key, s.patternId);
+          if (s.customStartTime || s.customEndTime) {
+            newCustomTimes.set(key, {
+              startTime: s.customStartTime || "",
+              endTime: s.customEndTime || "",
+            });
+          }
         }
         setGrid(newGrid);
+        setGridCustomTimes(newCustomTimes);
       }
 
       setDirty(false);
@@ -149,6 +172,7 @@ export default function AdminShiftsPage() {
     } else {
       setMonth(month - 1);
     }
+    setWeekIndex(0);
   };
 
   const goNext = () => {
@@ -158,6 +182,7 @@ export default function AdminShiftsPage() {
     } else {
       setMonth(month + 1);
     }
+    setWeekIndex(0);
   };
 
   // --- Cell Edit ---
@@ -178,10 +203,11 @@ export default function AdminShiftsPage() {
   // --- Auto-fill from requests ---
   const handleAutoFill = () => {
     const newGrid = new Map(grid);
+    const newCustomTimes = new Map(gridCustomTimes);
     let filled = 0;
 
     for (const staff of staffList) {
-      for (const day of days) {
+      for (const day of allDays) {
         const dateStr = formatDate(new Date(year, month - 1, day));
         const key = cellKey(staff.id, dateStr);
         const request = requestMap.get(key);
@@ -198,14 +224,22 @@ export default function AdminShiftsPage() {
               newGrid.set(key, patterns[0].id);
               filled++;
             }
+            if (request.customStartTime || request.customEndTime) {
+              newCustomTimes.set(key, {
+                startTime: request.customStartTime || "",
+                endTime: request.customEndTime || "",
+              });
+            }
           } else if (request.availability === "unavailable") {
             newGrid.delete(key);
+            newCustomTimes.delete(key);
           }
         }
       }
     }
 
     setGrid(newGrid);
+    setGridCustomTimes(newCustomTimes);
     setDirty(true);
     if (filled > 0) {
       toast.success(`${filled}件のシフトを希望から割り当てました`);
@@ -218,11 +252,18 @@ export default function AdminShiftsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const shiftsToSave: { staffId: string; date: string; patternId: string }[] =
+      const shiftsToSave: { staffId: string; date: string; patternId: string; customStartTime?: string; customEndTime?: string }[] =
         [];
       grid.forEach((patternId, key) => {
         const { staffId, date } = parseCellKey(key);
-        shiftsToSave.push({ staffId, date, patternId });
+        const custom = gridCustomTimes.get(key);
+        shiftsToSave.push({
+          staffId,
+          date,
+          patternId,
+          customStartTime: custom?.startTime || undefined,
+          customEndTime: custom?.endTime || undefined,
+        });
       });
 
       const result = await saveConfirmedShifts(shiftsToSave, yearMonth);
@@ -335,6 +376,24 @@ export default function AdminShiftsPage() {
         </div>
       </Card>
 
+      {/* Week Period Selector */}
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+        {weekPeriods.map((period, idx) => (
+          <button
+            key={idx}
+            onClick={() => setWeekIndex(idx)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-fast",
+              weekIndex === idx
+                ? "bg-system-blue text-white"
+                : "bg-bg-tertiary text-text-secondary hover:bg-bg-tertiary/80"
+            )}
+          >
+            {period.label}
+          </button>
+        ))}
+      </div>
+
       {/* Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -430,7 +489,7 @@ export default function AdminShiftsPage() {
                         >
                           <div
                             className={cn(
-                              "min-h-[32px] flex items-center justify-center rounded text-[11px] font-medium mx-auto",
+                              "min-h-[32px] flex flex-col items-center justify-center rounded text-[11px] font-medium mx-auto",
                               reqIndicator && `border ${reqIndicator}`,
                               pattern && "px-1",
                             )}
@@ -446,6 +505,17 @@ export default function AdminShiftsPage() {
                             }
                           >
                             {pattern ? pattern.shortName : ""}
+                            {(() => {
+                              const ct = gridCustomTimes.get(key);
+                              if (ct && (ct.startTime || ct.endTime)) {
+                                return (
+                                  <span className="text-[8px] opacity-70 leading-tight">
+                                    {ct.startTime || ""}-{ct.endTime || ""}
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                         </td>
                       );
@@ -568,6 +638,49 @@ export default function AdminShiftsPage() {
                 })}
               </div>
             </div>
+
+            {/* Custom Time */}
+            {grid.get(cellKey(editCell.staffId, editCell.date)) && (
+              <div>
+                <p className="text-sm font-medium text-text-primary mb-2">
+                  時間帯を調整
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-text-secondary mb-1">出勤</p>
+                    <input
+                      type="time"
+                      value={gridCustomTimes.get(cellKey(editCell.staffId, editCell.date))?.startTime || ""}
+                      onChange={(e) => {
+                        const k = cellKey(editCell.staffId, editCell.date);
+                        const existing = gridCustomTimes.get(k) || { startTime: "", endTime: "" };
+                        const next = new Map(gridCustomTimes);
+                        next.set(k, { ...existing, startTime: e.target.value });
+                        setGridCustomTimes(next);
+                        setDirty(true);
+                      }}
+                      className="w-full px-3 py-2 bg-bg-tertiary text-text-primary rounded-lg border-none outline-none text-sm focus:ring-2 focus:ring-system-blue/40"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs text-text-secondary mb-1">退勤</p>
+                    <input
+                      type="time"
+                      value={gridCustomTimes.get(cellKey(editCell.staffId, editCell.date))?.endTime || ""}
+                      onChange={(e) => {
+                        const k = cellKey(editCell.staffId, editCell.date);
+                        const existing = gridCustomTimes.get(k) || { startTime: "", endTime: "" };
+                        const next = new Map(gridCustomTimes);
+                        next.set(k, { ...existing, endTime: e.target.value });
+                        setGridCustomTimes(next);
+                        setDirty(true);
+                      }}
+                      className="w-full px-3 py-2 bg-bg-tertiary text-text-primary rounded-lg border-none outline-none text-sm focus:ring-2 focus:ring-system-blue/40"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>

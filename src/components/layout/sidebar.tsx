@@ -8,8 +8,10 @@ import {
   CalendarDays,
   LayoutDashboard,
   CalendarCog,
+  ClipboardEdit,
   Users,
   Settings,
+  HelpCircle,
   LogOut,
 } from "lucide-react";
 import { NAV_ITEMS_STAFF, NAV_ITEMS_ADMIN } from "@/lib/constants";
@@ -24,8 +26,10 @@ const ICON_MAP = {
   CalendarDays,
   LayoutDashboard,
   CalendarCog,
+  ClipboardEdit,
   Users,
   Settings,
+  HelpCircle,
 } as const;
 
 // ---------------------------------------------------------------------------

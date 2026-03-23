@@ -41,6 +41,8 @@ export default function AdminSettingsPage() {
       formData.set("targetMonthOffset", String(settings.targetMonthOffset));
       formData.set("minStaffPerSlot", String(settings.minStaffPerSlot));
       formData.set("maxStaffPerSlot", String(settings.maxStaffPerSlot));
+      formData.set("allowedStartTimes", settings.allowedStartTimes.join(","));
+      formData.set("allowedEndTimes", settings.allowedEndTimes.join(","));
 
       const result = await updateStoreSettings(formData);
       if (result.success) {
@@ -194,6 +196,61 @@ export default function AdminSettingsPage() {
             }
             placeholder="1以上"
           />
+        </Card>
+      </section>
+
+      {/* シフト時間帯セクション */}
+      <section>
+        <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2 px-4">
+          シフト時間帯オプション
+        </h2>
+        <Card className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              選択可能な出勤時刻
+            </label>
+            <p className="text-xs text-text-secondary mb-2">
+              カンマ区切りで入力（例: 09:00,09:30,10:00）
+            </p>
+            <input
+              type="text"
+              value={settings.allowedStartTimes.join(",")}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  allowedStartTimes: e.target.value
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean),
+                })
+              }
+              className="w-full px-3 py-2.5 bg-bg-tertiary text-text-primary rounded-lg border-none outline-none text-sm placeholder:text-text-tertiary transition-all duration-fast focus:ring-2 focus:ring-system-blue/40"
+              placeholder="09:00,09:30,10:00,10:30,11:00"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              選択可能な退勤時刻
+            </label>
+            <p className="text-xs text-text-secondary mb-2">
+              カンマ区切りで入力（例: 17:00,18:00,22:00）
+            </p>
+            <input
+              type="text"
+              value={settings.allowedEndTimes.join(",")}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  allowedEndTimes: e.target.value
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean),
+                })
+              }
+              className="w-full px-3 py-2.5 bg-bg-tertiary text-text-primary rounded-lg border-none outline-none text-sm placeholder:text-text-tertiary transition-all duration-fast focus:ring-2 focus:ring-system-blue/40"
+              placeholder="15:00,16:00,17:00,18:00,19:00,20:00,21:00,22:00"
+            />
+          </div>
         </Card>
       </section>
 

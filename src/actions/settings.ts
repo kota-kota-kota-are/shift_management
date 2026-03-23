@@ -87,6 +87,14 @@ export async function updateStoreSettings(
       key: "max_staff_per_slot",
       value: (formData.get("maxStaffPerSlot") as string | null) ?? "",
     },
+    {
+      key: "allowed_start_times" as StoreSettingKey,
+      value: (formData.get("allowedStartTimes") as string | null) ?? "",
+    },
+    {
+      key: "allowed_end_times" as StoreSettingKey,
+      value: (formData.get("allowedEndTimes") as string | null) ?? "",
+    },
   ];
 
   // --- バリデーション ---

@@ -320,6 +320,8 @@ export async function submitShiftRequests(
         data.staffId,
         req.date,
         req.patternId ?? "",
+        req.customStartTime ?? "",
+        req.customEndTime ?? "",
         req.availability,
         req.note ?? "",
         now,
@@ -416,6 +418,8 @@ export async function getConfirmedShifts(
           patternStartTime: patternInfo?.startTime ?? "",
           patternEndTime: patternInfo?.endTime ?? "",
           patternColor: patternInfo?.color ?? null,
+          effectiveStartTime: shift.customStartTime || patternInfo?.startTime || "",
+          effectiveEndTime: shift.customEndTime || patternInfo?.endTime || "",
         };
       });
 
@@ -435,7 +439,7 @@ export async function getConfirmedShifts(
 // ============================================================
 
 export async function saveConfirmedShifts(
-  shifts: { staffId: string; date: string; patternId: string }[],
+  shifts: { staffId: string; date: string; patternId: string; customStartTime?: string; customEndTime?: string }[],
   yearMonth: string,
 ): Promise<ActionResult<null>> {
   try {
@@ -468,6 +472,8 @@ export async function saveConfirmedShifts(
         shift.staffId,
         shift.date,
         shift.patternId,
+        shift.customStartTime ?? "",
+        shift.customEndTime ?? "",
         "draft",
         "",
         session.staffId,
@@ -565,6 +571,84 @@ export async function publishShifts(
     return {
       success: false,
       error: "シフトの公開に失敗しました",
+      code: "SHEETS_ERROR",
+    };
+  }
+}
+
+// ============================================================
+// 10. adminUpdateShiftRequest - 管理者によるシフト希望の編集
+// ============================================================
+
+export async function adminUpdateShiftRequest(
+  requestId: string,
+  updates: {
+    availability?: Availability;
+    patternId?: string | null;
+    customStartTime?: string | null;
+    customEndTime?: string | null;
+    note?: string | null;
+  },
+): Promise<ActionResult<null>> {
+  try {
+    const adminResult = await requireAdmin();
+    if (!adminResult.success) return adminResult;
+
+    const rowIndex = await findRowIndex(
+      SHEET_NAMES.SHIFT_REQUESTS,
+      REQ.ID,
+      requestId,
+    );
+
+    if (rowIndex === null) {
+      return {
+        success: false,
+        error: "指定されたシフト希望が見つかりません",
+        code: "NOT_FOUND",
+      };
+    }
+
+    const rows = await getSheetData(SHEET_NAMES.SHIFT_REQUESTS);
+    const existingRow = rows[rowIndex + 1];
+    if (!existingRow) {
+      return {
+        success: false,
+        error: "データの取得に失敗しました",
+        code: "INTERNAL_ERROR",
+      };
+    }
+
+    const now = nowISO();
+    const updatedRow = [...existingRow];
+
+    if (updates.availability !== undefined) {
+      updatedRow[REQ.AVAILABILITY] = updates.availability;
+    }
+    if (updates.patternId !== undefined) {
+      updatedRow[REQ.PATTERN_ID] = updates.patternId ?? "";
+    }
+    if (updates.customStartTime !== undefined) {
+      updatedRow[REQ.CUSTOM_START_TIME] = updates.customStartTime ?? "";
+    }
+    if (updates.customEndTime !== undefined) {
+      updatedRow[REQ.CUSTOM_END_TIME] = updates.customEndTime ?? "";
+    }
+    if (updates.note !== undefined) {
+      updatedRow[REQ.NOTE] = updates.note ?? "";
+    }
+    updatedRow[REQ.UPDATED_AT] = now;
+
+    await updateRow(SHEET_NAMES.SHIFT_REQUESTS, rowIndex, updatedRow);
+
+    revalidatePath("/admin/requests");
+    revalidatePath("/admin/shifts");
+
+    return { success: true, data: null };
+  } catch (err) {
+    console.error("adminUpdateShiftRequest error:", err);
+    return {
+      success: false,
+      error: "シフト希望の更新に失敗しました",
       code: "SHEETS_ERROR",
     };
   }

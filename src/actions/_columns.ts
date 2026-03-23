@@ -50,10 +50,12 @@ export const REQ = {
   STAFF_ID: 1,
   DATE: 2,
   PATTERN_ID: 3,
-  AVAILABILITY: 4,
-  NOTE: 5,
-  SUBMITTED_AT: 6,
-  UPDATED_AT: 7,
+  CUSTOM_START_TIME: 4,
+  CUSTOM_END_TIME: 5,
+  AVAILABILITY: 6,
+  NOTE: 7,
+  SUBMITTED_AT: 8,
+  UPDATED_AT: 9,
 } as const;
 
 // shifts.ts: 確定シフトカラム
@@ -62,11 +64,13 @@ export const CONF = {
   STAFF_ID: 1,
   DATE: 2,
   PATTERN_ID: 3,
-  STATUS: 4,
-  ADMIN_NOTE: 5,
-  CONFIRMED_BY: 6,
-  CONFIRMED_AT: 7,
-  UPDATED_AT: 8,
+  CUSTOM_START_TIME: 4,
+  CUSTOM_END_TIME: 5,
+  STATUS: 6,
+  ADMIN_NOTE: 7,
+  CONFIRMED_BY: 8,
+  CONFIRMED_AT: 9,
+  UPDATED_AT: 10,
 } as const;
 
 // shifts.ts: スタッフ一覧カラム（名前取得用）

@@ -51,6 +51,8 @@ export type ShiftRequest = {
   staffId: string;
   date: string; // YYYY-MM-DD
   patternId: string | null;
+  customStartTime: string | null; // HH:mm - overrides pattern start time
+  customEndTime: string | null; // HH:mm - overrides pattern end time
   availability: Availability;
   note: string | null;
   submittedAt: string;
@@ -73,6 +75,8 @@ export type ConfirmedShift = {
   staffId: string;
   date: string; // YYYY-MM-DD
   patternId: string;
+  customStartTime: string | null; // HH:mm - overrides pattern start time
+  customEndTime: string | null; // HH:mm - overrides pattern end time
   status: ShiftStatus;
   adminNote: string | null;
   confirmedBy: string;
@@ -87,6 +91,8 @@ export type ConfirmedShiftWithDetails = ConfirmedShift & {
   patternStartTime: string;
   patternEndTime: string;
   patternColor: string | null;
+  effectiveStartTime: string; // customStartTime or patternStartTime
+  effectiveEndTime: string; // customEndTime or patternEndTime
 };
 
 // ============================================================
@@ -107,7 +113,9 @@ export type StoreSettingKey =
   | "business_start_time"
   | "business_end_time"
   | "min_staff_per_slot"
-  | "max_staff_per_slot";
+  | "max_staff_per_slot"
+  | "allowed_start_times"
+  | "allowed_end_times";
 
 export type ParsedStoreSettings = {
   storeName: string;
@@ -117,6 +125,8 @@ export type ParsedStoreSettings = {
   businessEndTime: string;
   minStaffPerSlot: number;
   maxStaffPerSlot: number;
+  allowedStartTimes: string[]; // e.g., ["09:00", "09:30", "10:00"]
+  allowedEndTimes: string[]; // e.g., ["17:00", "18:00", "22:00"]
 };
 
 // ============================================================
@@ -171,6 +181,8 @@ export type MonthlyShiftRequestInput = {
     date: string; // YYYY-MM-DD
     availability: Availability;
     patternId?: string;
+    customStartTime?: string;
+    customEndTime?: string;
     note?: string;
   }[];
 };

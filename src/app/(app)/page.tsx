@@ -115,7 +115,7 @@ export default async function HomePage() {
                   {todayShift.patternName}
                 </p>
                 <p className="text-[15px] text-text-secondary">
-                  {todayShift.patternStartTime} ~ {todayShift.patternEndTime}
+                  {todayShift.effectiveStartTime} ~ {todayShift.effectiveEndTime}
                 </p>
               </div>
               <span
@@ -206,7 +206,7 @@ export default async function HomePage() {
                         {shift.patternShortName}
                       </span>
                       <span className="block text-[9px] text-text-tertiary mt-0.5">
-                        {shift.patternStartTime}
+                        {shift.effectiveStartTime}
                       </span>
                     </div>
                   ) : (

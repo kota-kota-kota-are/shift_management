@@ -18,6 +18,8 @@ import { Card } from "@/components/ui/card";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/badge";
 import type { ShiftPattern, Availability, SessionData } from "@/types";
+import type { ParsedStoreSettings } from "@/types";
+import { getStoreSettings } from "@/actions/settings";
 
 // ============================================================
 // Types
@@ -25,6 +27,8 @@ import type { ShiftPattern, Availability, SessionData } from "@/types";
 
 type DayRequest = {
   patternId: string | null;
+  customStartTime: string | null;
+  customEndTime: string | null;
   availability: Availability;
   note: string;
 };
@@ -158,6 +162,9 @@ export default function ShiftRequestPage() {
   const [modalPatternId, setModalPatternId] = useState<string | null>(null);
   const [modalAvailability, setModalAvailability] = useState<Availability>("available");
   const [modalNote, setModalNote] = useState("");
+  const [modalCustomStartTime, setModalCustomStartTime] = useState<string | null>(null);
+  const [modalCustomEndTime, setModalCustomEndTime] = useState<string | null>(null);
+  const [storeSettings, setStoreSettings] = useState<ParsedStoreSettings | null>(null);
 
   // Submit confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -188,10 +195,11 @@ export default function ShiftRequestPage() {
   // --- Load data ---
   const loadData = useCallback(() => {
     startTransition(async () => {
-      const [sessionResult, patternsResult, requestsResult] = await Promise.all([
+      const [sessionResult, patternsResult, requestsResult, settingsResult] = await Promise.all([
         getSessionData(),
         getShiftPatterns(),
         getShiftRequests(year, month),
+        getStoreSettings(),
       ]);
 
       if (sessionResult) {
@@ -202,12 +210,18 @@ export default function ShiftRequestPage() {
         setPatterns(patternsResult.data);
       }
 
+      if (settingsResult.success) {
+        setStoreSettings(settingsResult.data);
+      }
+
       if (requestsResult.success) {
         const map = new Map<string, DayRequest>();
         let hasData = false;
         for (const req of requestsResult.data) {
           map.set(req.date, {
             patternId: req.patternId,
+            customStartTime: req.customStartTime ?? null,
+            customEndTime: req.customEndTime ?? null,
             availability: req.availability,
             note: req.note ?? "",
           });
@@ -235,10 +249,14 @@ export default function ShiftRequestPage() {
     const existing = requests.get(dateStr);
     if (existing) {
       setModalPatternId(existing.patternId);
+      setModalCustomStartTime(existing.customStartTime);
+      setModalCustomEndTime(existing.customEndTime);
       setModalAvailability(existing.availability);
       setModalNote(existing.note);
     } else {
       setModalPatternId(null);
+      setModalCustomStartTime(null);
+      setModalCustomEndTime(null);
       setModalAvailability("available");
       setModalNote("");
     }
@@ -254,6 +272,8 @@ export default function ShiftRequestPage() {
     const newMap = new Map(requests);
     newMap.set(selectedDate, {
       patternId: modalPatternId,
+      customStartTime: modalCustomStartTime,
+      customEndTime: modalCustomEndTime,
       availability: modalAvailability,
       note: modalNote,
     });
@@ -294,6 +314,8 @@ export default function ShiftRequestPage() {
         date,
         availability: data.availability,
         patternId: data.patternId ?? undefined,
+        customStartTime: data.customStartTime ?? undefined,
+        customEndTime: data.customEndTime ?? undefined,
         note: data.note || undefined,
       }));
 
@@ -474,11 +496,18 @@ export default function ShiftRequestPage() {
 
                   {/* Pattern short name + availability icon */}
                   {req && (
-                    <div className="flex items-center gap-0.5 mt-0.5">
-                      {getAvailabilityIcon(req.availability)}
-                      {pattern && (
-                        <span className="text-[10px] font-medium text-text-secondary truncate max-w-[36px]">
-                          {pattern.shortName}
+                    <div className="flex flex-col items-center gap-0 mt-0.5">
+                      <div className="flex items-center gap-0.5">
+                        {getAvailabilityIcon(req.availability)}
+                        {pattern && (
+                          <span className="text-[10px] font-medium text-text-secondary truncate max-w-[36px]">
+                            {pattern.shortName}
+                          </span>
+                        )}
+                      </div>
+                      {(req.customStartTime || req.customEndTime) && (
+                        <span className="text-[8px] text-text-tertiary leading-tight">
+                          {req.customStartTime || ""}~{req.customEndTime || ""}
                         </span>
                       )}
                     </div>
@@ -603,6 +632,43 @@ export default function ShiftRequestPage() {
                     </span>
                   </button>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Custom Time Selection */}
+          {modalAvailability !== "unavailable" && storeSettings && (
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                希望時間帯
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-text-secondary mb-1.5">出勤時刻</p>
+                  <select
+                    value={modalCustomStartTime ?? ""}
+                    onChange={(e) => setModalCustomStartTime(e.target.value || null)}
+                    className="w-full px-3 py-2.5 bg-bg-tertiary text-text-primary rounded-lg border-none outline-none text-sm transition-all duration-fast focus:ring-2 focus:ring-system-blue/40"
+                  >
+                    <option value="">パターン既定</option>
+                    {storeSettings.allowedStartTimes.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-xs text-text-secondary mb-1.5">退勤時刻</p>
+                  <select
+                    value={modalCustomEndTime ?? ""}
+                    onChange={(e) => setModalCustomEndTime(e.target.value || null)}
+                    className="w-full px-3 py-2.5 bg-bg-tertiary text-text-primary rounded-lg border-none outline-none text-sm transition-all duration-fast focus:ring-2 focus:ring-system-blue/40"
+                  >
+                    <option value="">パターン既定</option>
+                    {storeSettings.allowedEndTimes.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
           )}

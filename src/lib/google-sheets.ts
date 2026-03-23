@@ -16,12 +16,12 @@ const HEADERS: Record<string, string[]> = {
     "breakMinutes", "color", "displayOrder", "isActive", "createdAt",
   ],
   シフト希望: [
-    "id", "staffId", "date", "patternId", "availability",
-    "note", "submittedAt", "updatedAt",
+    "id", "staffId", "date", "patternId", "customStartTime", "customEndTime",
+    "availability", "note", "submittedAt", "updatedAt",
   ],
   確定シフト: [
-    "id", "staffId", "date", "patternId", "status",
-    "adminNote", "confirmedBy", "confirmedAt", "updatedAt",
+    "id", "staffId", "date", "patternId", "customStartTime", "customEndTime",
+    "status", "adminNote", "confirmedBy", "confirmedAt", "updatedAt",
   ],
   店舗設定: ["key", "value", "description", "updatedAt"],
 };
@@ -103,6 +103,8 @@ function generateDemoShifts(): string[][] {
           staffId,
           dateStr,
           patternId,
+          "", // customStartTime
+          "", // customEndTime
           "published",
           "",
           STAFF_IDS.admin,
@@ -136,20 +138,20 @@ function generateDemoRequests(): string[][] {
     if (dow === 0) {
       counter++;
       rows.push([
-        `req_${counter}`, STAFF_IDS.tanaka, dateStr, "", "unavailable",
-        "日曜は休みたいです", ts, ts,
+        `req_${counter}`, STAFF_IDS.tanaka, dateStr, "", "", "",
+        "unavailable", "日曜は休みたいです", ts, ts,
       ]);
     } else if ([1, 3, 5].includes(dow)) {
       counter++;
       rows.push([
-        `req_${counter}`, STAFF_IDS.tanaka, dateStr, PATTERN_IDS.early, "preferred",
-        "", ts, ts,
+        `req_${counter}`, STAFF_IDS.tanaka, dateStr, PATTERN_IDS.early, "", "",
+        "preferred", "", ts, ts,
       ]);
     } else if ([2, 4].includes(dow)) {
       counter++;
       rows.push([
-        `req_${counter}`, STAFF_IDS.tanaka, dateStr, PATTERN_IDS.late, "available",
-        "", ts, ts,
+        `req_${counter}`, STAFF_IDS.tanaka, dateStr, PATTERN_IDS.late, "", "",
+        "available", "", ts, ts,
       ]);
     }
   }
@@ -162,14 +164,14 @@ function generateDemoRequests(): string[][] {
     if (dow === 0 || dow === 6) {
       counter++;
       rows.push([
-        `req_${counter}`, STAFF_IDS.sato, dateStr, "", "unavailable",
-        "週末は予定があります", ts, ts,
+        `req_${counter}`, STAFF_IDS.sato, dateStr, "", "", "",
+        "unavailable", "週末は予定があります", ts, ts,
       ]);
     } else {
       counter++;
       rows.push([
-        `req_${counter}`, STAFF_IDS.sato, dateStr, PATTERN_IDS.early, "preferred",
-        "", ts, ts,
+        `req_${counter}`, STAFF_IDS.sato, dateStr, PATTERN_IDS.early, "", "",
+        "preferred", "", ts, ts,
       ]);
     }
   }
@@ -203,6 +205,8 @@ function buildInitialData(): Record<string, string[][]> {
       ["business_end_time", "22:00", "営業終了時刻", ts],
       ["min_staff_per_slot", "2", "最小スタッフ数", ts],
       ["max_staff_per_slot", "5", "最大スタッフ数", ts],
+      ["allowed_start_times", "09:00,09:30,10:00,10:30,11:00", "選択可能な出勤時刻", ts],
+      ["allowed_end_times", "15:00,16:00,17:00,18:00,19:00,20:00,21:00,22:00", "選択可能な退勤時刻", ts],
     ],
   };
 }

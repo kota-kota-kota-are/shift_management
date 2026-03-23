@@ -118,7 +118,7 @@ export default async function AdminDashboardPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-text-primary">
-                      {s.patternStartTime} - {s.patternEndTime}
+                      {s.effectiveStartTime} - {s.effectiveEndTime}
                     </p>
                     <Badge variant="info">{s.patternShortName}</Badge>
                   </div>
