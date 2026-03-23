@@ -38,9 +38,9 @@ const TAB_ITEMS_STAFF = NAV_ITEMS_STAFF;
 const TAB_ITEMS_ADMIN = [
   NAV_ITEMS_ADMIN[0], // ダッシュボード
   NAV_ITEMS_ADMIN[1], // シフト管理
-  NAV_ITEMS_ADMIN[2], // 希望編集
   NAV_ITEMS_ADMIN[4], // 勤務表
   NAV_ITEMS_ADMIN[5], // 設定
+  NAV_ITEMS_ADMIN[6], // ヘルプ
 ];
 
 // ---------------------------------------------------------------------------
