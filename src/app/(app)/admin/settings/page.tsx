@@ -75,7 +75,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-8">
+    <div className="max-w-2xl mx-auto px-4 space-y-6 pb-8">
       {/* ページヘッダー */}
       <div>
         <h1 className="text-2xl font-bold text-text-primary">設定</h1>

@@ -381,7 +381,7 @@ export default function ShiftRequestPage() {
   const totalDays = getDaysInMonth(year, month);
 
   return (
-    <div className="max-w-lg mx-auto pb-28">
+    <div className="max-w-lg mx-auto px-4 pb-28">
       {/* ================================================ */}
       {/* Header */}
       {/* ================================================ */}
@@ -539,7 +539,10 @@ export default function ShiftRequestPage() {
       {/* ================================================ */}
       {/* Footer: Submit button */}
       {/* ================================================ */}
-      <div className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-bg-primary via-bg-primary to-transparent pt-6">
+      <div
+        className="fixed bottom-20 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-bg-primary via-bg-primary to-transparent pt-6 z-40"
+        style={{ bottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
+      >
         <div className="max-w-lg mx-auto">
           <Button
             variant="primary"

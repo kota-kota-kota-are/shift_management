@@ -193,7 +193,7 @@ export default function AdminStaffPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4">
       <Toaster position="top-center" />
 
       {/* Header */}
@@ -293,14 +293,14 @@ export default function AdminStaffPage() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => openEditModal(staff)}
-                            className="p-2 rounded-lg text-text-secondary hover:bg-bg-tertiary transition-colors duration-fast"
+                            className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-secondary hover:bg-bg-tertiary transition-colors duration-fast"
                             title="編集"
                           >
                             <Pencil size={16} />
                           </button>
                           <button
                             onClick={() => openResetPinModal(staff)}
-                            className="p-2 rounded-lg text-text-secondary hover:bg-bg-tertiary transition-colors duration-fast"
+                            className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-text-secondary hover:bg-bg-tertiary transition-colors duration-fast"
                             title="PINリセット"
                           >
                             <KeyRound size={16} />
@@ -308,7 +308,7 @@ export default function AdminStaffPage() {
                           <button
                             onClick={() => handleToggleActive(staff)}
                             className={cn(
-                              "p-2 rounded-lg transition-colors duration-fast",
+                              "p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors duration-fast",
                               staff.isActive
                                 ? "text-system-red hover:bg-system-red/10"
                                 : "text-system-green hover:bg-system-green/10",
@@ -377,6 +377,7 @@ export default function AdminStaffPage() {
                     size="sm"
                     variant="secondary"
                     onClick={() => openEditModal(staff)}
+                    className="min-h-[44px]"
                   >
                     <Pencil size={14} className="mr-1" />
                     編集
@@ -385,6 +386,7 @@ export default function AdminStaffPage() {
                     size="sm"
                     variant="secondary"
                     onClick={() => openResetPinModal(staff)}
+                    className="min-h-[44px]"
                   >
                     <KeyRound size={14} className="mr-1" />
                     PIN
@@ -393,6 +395,7 @@ export default function AdminStaffPage() {
                     size="sm"
                     variant={staff.isActive ? "destructive" : "primary"}
                     onClick={() => handleToggleActive(staff)}
+                    className="min-h-[44px]"
                   >
                     {staff.isActive ? (
                       <>
@@ -438,7 +441,7 @@ export default function AdminStaffPage() {
                 type="button"
                 onClick={() => setFormRole("staff")}
                 className={cn(
-                  "flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-fast",
+                  "flex-1 py-2.5 min-h-[44px] rounded-lg text-sm font-medium transition-all duration-fast",
                   formRole === "staff"
                     ? "bg-system-blue text-white"
                     : "bg-bg-tertiary text-text-primary",
@@ -450,7 +453,7 @@ export default function AdminStaffPage() {
                 type="button"
                 onClick={() => setFormRole("admin")}
                 className={cn(
-                  "flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-fast",
+                  "flex-1 py-2.5 min-h-[44px] rounded-lg text-sm font-medium transition-all duration-fast",
                   formRole === "admin"
                     ? "bg-system-purple text-white"
                     : "bg-bg-tertiary text-text-primary",

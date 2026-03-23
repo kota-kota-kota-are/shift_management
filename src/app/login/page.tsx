@@ -187,7 +187,7 @@ export default function LoginPage() {
                       <button
                         type="button"
                         onClick={() => handleStaffSelect(staff.id)}
-                        className={`w-full text-left px-4 py-3 flex items-center justify-between hover:bg-[#F2F2F7] active:bg-[#E5E5EA] transition-colors duration-150 ${
+                        className={`w-full text-left px-4 py-3.5 flex items-center justify-between min-h-[44px] hover:bg-[#F2F2F7] active:bg-[#E5E5EA] transition-colors duration-150 ${
                           index < staffList.length - 1
                             ? "border-b border-[rgba(60,60,67,0.12)]"
                             : ""
@@ -228,7 +228,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex items-center gap-1 text-[#007AFF] text-[15px] mb-5 -ml-1 hover:opacity-70 transition-opacity"
+                className="flex items-center gap-1 text-[#007AFF] text-[15px] mb-5 -ml-2 px-1 min-h-[44px] hover:opacity-70 active:opacity-50 transition-opacity"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -291,7 +291,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={handleLogin}
                 disabled={isPending || pin.some((d) => d === "")}
-                className="w-full py-3 bg-[#007AFF] text-white text-[17px] font-semibold rounded-xl hover:bg-[#0066DD] active:bg-[#0055CC] disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+                className="w-full py-3 min-h-[44px] bg-[#007AFF] text-white text-[17px] font-semibold rounded-xl hover:bg-[#0066DD] active:bg-[#0055CC] disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
               >
                 {isPending ? (
                   <span className="flex items-center justify-center gap-2">

@@ -63,7 +63,7 @@ export default async function AdminDashboardPage() {
   const publishedCount = shifts.filter((s) => s.status === "published").length;
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto px-4 pb-24">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-text-primary">ダッシュボード</h1>
         <p className="text-sm text-text-secondary">
@@ -190,7 +190,7 @@ export default async function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="p-3 bg-bg-tertiary rounded-lg text-center">
               <p className="text-2xl font-bold text-system-orange">{draftCount}</p>
               <p className="text-xs text-text-secondary mt-1">下書き</p>

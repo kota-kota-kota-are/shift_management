@@ -196,7 +196,7 @@ export default function AdminRequestsPage() {
   };
 
   return (
-    <div className="max-w-full mx-auto">
+    <div className="max-w-full mx-auto px-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
@@ -252,6 +252,8 @@ export default function AdminRequestsPage() {
           <div className="w-6 h-6 border-2 border-system-blue border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
+        <>
+        <p className="text-xs text-text-tertiary mb-2 sm:hidden">← 横スクロールで全日程を確認できます</p>
         <Card padding="sm">
           <div className="overflow-x-auto">
             <table className="min-w-max w-full border-collapse">
@@ -369,6 +371,7 @@ export default function AdminRequestsPage() {
             </div>
           </div>
         </Card>
+        </>
       )}
 
       {/* Edit Modal */}
@@ -463,7 +466,7 @@ export default function AdminRequestsPage() {
                 <label className="block text-sm font-medium text-text-primary mb-2">
                   希望時間帯
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-text-secondary mb-1.5">出勤時刻</p>
                     <select

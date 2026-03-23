@@ -51,7 +51,7 @@ export default function HelpPage() {
     : visibleSections;
 
   return (
-    <div className="max-w-2xl mx-auto pb-28">
+    <div className="max-w-2xl mx-auto px-4 pb-28">
       {/* Header */}
       <div className="mb-5">
         <div className="flex items-center gap-3 mb-1">
@@ -90,7 +90,7 @@ export default function HelpPage() {
       </Card>
 
       {/* Filter Tags */}
-      <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-2 -mx-4 px-4">
         <button
           onClick={() => setActiveFilter(null)}
           className={cn(
@@ -119,7 +119,7 @@ export default function HelpPage() {
       </div>
 
       {/* Sections */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {filteredSections.includes("getting-started") && (
           <GettingStartedSection searchQuery={searchQuery} />
         )}

@@ -154,7 +154,7 @@ export default async function HomePage() {
           今週のシフト
         </h2>
         <Card padding="sm">
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
             {weekShifts.map(({ date, dateStr, shift }) => {
               const dayOfWeek = date.getDay();
               const isTodayDate = isToday(date);
@@ -165,7 +165,7 @@ export default async function HomePage() {
                 <div
                   key={dateStr}
                   className={`
-                    flex flex-col items-center py-2 px-1 rounded-xl text-center
+                    flex flex-col items-center py-2 px-0.5 sm:px-1 rounded-xl text-center min-w-0
                     ${isTodayDate ? "bg-system-blue/10 ring-2 ring-system-blue/30" : ""}
                   `}
                 >
@@ -221,7 +221,7 @@ export default async function HomePage() {
         </Card>
         <Link
           href="/schedule"
-          className="flex items-center justify-between mt-2 px-3 py-2.5 rounded-xl text-[15px] text-system-blue font-medium hover:bg-system-blue/5 transition-colors"
+          className="flex items-center justify-between mt-2 px-3 py-3 min-h-[44px] rounded-xl text-[15px] text-system-blue font-medium hover:bg-system-blue/5 active:bg-system-blue/10 transition-colors"
         >
           <span className="flex items-center gap-2">
             <CalendarDays size={18} />
@@ -268,7 +268,7 @@ export default async function HomePage() {
             </div>
             <Link
               href="/shift-request"
-              className="flex items-center gap-1 text-[14px] text-system-blue font-medium hover:opacity-80 transition-opacity"
+              className="flex items-center gap-1 text-[14px] text-system-blue font-medium min-h-[44px] min-w-[44px] px-2 -mr-2 rounded-lg hover:bg-system-blue/5 active:bg-system-blue/10 transition-colors"
             >
               {requestStatus.submitted ? "確認する" : "提出する"}
               <ChevronRight size={16} />

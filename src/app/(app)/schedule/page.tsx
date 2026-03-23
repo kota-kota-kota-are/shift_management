@@ -132,14 +132,14 @@ export default function SchedulePage() {
   const selectedShifts = selectedDate ? shiftsByDate.get(selectedDate) || [] : [];
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-2xl font-bold text-text-primary">勤務表</h1>
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
         <Card padding="sm">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-system-blue/15 flex items-center justify-center">
@@ -188,7 +188,7 @@ export default function SchedulePage() {
       </Card>
 
       {/* Week Period Selector */}
-      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+      <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 px-1 -mx-1 scrollbar-none">
         {weekPeriods.map((period, idx) => (
           <button
             key={idx}

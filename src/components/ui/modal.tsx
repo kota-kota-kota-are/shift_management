@@ -42,8 +42,10 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         className="
           relative z-10
           w-full max-w-md mx-4
+          max-h-[85vh]
           bg-bg-secondary rounded-2xl shadow-lg
           animate-[scaleIn_200ms_ease-out]
+          pb-[env(safe-area-inset-bottom)]
         "
       >
         {/* Header */}
@@ -52,7 +54,9 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           <button
             onClick={onClose}
             className="
-              p-1 rounded-full
+              p-2 rounded-full
+              min-w-[44px] min-h-[44px]
+              flex items-center justify-center
               text-text-secondary hover:bg-bg-tertiary
               transition-colors duration-fast
             "
@@ -62,7 +66,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4">{children}</div>
+        <div className="px-5 py-4 max-h-[calc(85vh-4rem)] overflow-y-auto">{children}</div>
       </div>
     </div>
   );

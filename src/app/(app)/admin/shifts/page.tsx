@@ -314,7 +314,7 @@ export default function AdminShiftsPage() {
   };
 
   return (
-    <div className="max-w-full mx-auto">
+    <div className="max-w-full mx-auto px-4">
       <Toaster position="top-center" />
 
       {/* Header */}
@@ -400,6 +400,8 @@ export default function AdminShiftsPage() {
           <div className="w-6 h-6 border-2 border-system-blue border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
+        <>
+        <p className="text-xs text-text-tertiary mb-2 sm:hidden">← 横スクロールで全日程を確認できます</p>
         <Card padding="sm">
           <div className="overflow-x-auto">
             <table className="min-w-max w-full border-collapse">
@@ -526,6 +528,7 @@ export default function AdminShiftsPage() {
             </table>
           </div>
         </Card>
+        </>
       )}
 
       {/* Edit Cell Modal */}
@@ -589,7 +592,7 @@ export default function AdminShiftsPage() {
               <p className="text-sm font-medium text-text-primary mb-2">
                 シフトパターンを選択
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {/* OFF option */}
                 <button
                   onClick={() => {
